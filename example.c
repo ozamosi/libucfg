@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 	if ((err = ucfg_read_file(&cfg, "example.conf")) == UCFG_OK) {
 
 		/* lookup a value in the config and print it */
-		if (ucfg_lookup(&lvl2, cfg, "root:child node with list:") == UCFG_OK)
+		if (ucfg_lookup(cfg, &lvl2, "root:child node with list:") == UCFG_OK)
 			printf("%s\n", lvl2->value);
 
 		ucfg_node_destroy(cfg);

@@ -445,7 +445,7 @@ static char *strsepc(char **stringp)
 }
 
 /* lookup a section or value in a config structure */
-int ucfg_lookup(ucfg_node **found, ucfg_node *root, const char *path)
+int ucfg_lookup(ucfg_node *root, ucfg_node **found, const char *path)
 {
 	char *lpath;
 	char *curpos;
@@ -482,4 +482,13 @@ int ucfg_lookup(ucfg_node **found, ucfg_node *root, const char *path)
 	}
 
 	return UCFG_OK;
+}
+
+char* ucfg_lookup_string(ucfg_node *root, const char *path)
+{
+	ucfg_node *hit;
+	int result = ucfg_lookup(root, &hit, path);
+	if (result != UCFG_OK)
+		return NULL;
+	return hit->value;
 }
