@@ -29,7 +29,7 @@ root: {\n\
     \"list item2\";\n\
   }\n\
 }\n";
-	struct ucfg_node *cfg, *tmp;
+	ucfg_node *cfg, *tmp;
 	ucfg_read_string(&cfg, strcfg);
 
 	assert_equals (ucfg_lookup(&tmp, cfg, "root:child node with list:"), UCFG_OK, "Failure when looking up element");

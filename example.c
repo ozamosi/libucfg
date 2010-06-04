@@ -21,38 +21,43 @@
 
 int main(int argc, char **argv)
 {
-	struct ucfg_node *cfg, *lvl1, *lvl2;
+	ucfg_node *cfg, *lvl1, *lvl2;
 	int err;
 
 	/* create a root element and set its name */
-	ucfg_node_init(&cfg);
+	cfg = ucfg_new_node();
 	ucfg_node_name_set(cfg, "root");
 
 	/* create subsection */
-	ucfg_node_sub_append(cfg, &lvl1);
+	lvl1 = ucfg_new_node ();
+	ucfg_node_sub_append(cfg, lvl1);
 
 	/* set name and value for first element in subsection */
 	ucfg_node_name_set(lvl1, "child");
 	ucfg_node_value_set(lvl1, "child value");
 
 	/* append another element to the subsection */
-	ucfg_node_sub_append(cfg, &lvl1);
+	lvl1 = ucfg_new_node ();
+	ucfg_node_sub_append(cfg, lvl1);
 
 	/* set name and value for that element */
 	ucfg_node_name_set(lvl1, "another child");
 	ucfg_node_value_set(lvl1, "another child's value");
 
 	/* append yet another element and name it */
-	ucfg_node_sub_append(cfg, &lvl1);
+	lvl1 = ucfg_new_node ();
+	ucfg_node_sub_append(cfg, lvl1);
 	ucfg_node_name_set(lvl1, "child node with list");
 
 	/* and make it a subsection */
-	ucfg_node_sub_append(lvl1, &lvl2);
+	lvl2 = ucfg_new_node ();
+	ucfg_node_sub_append(lvl1, lvl2);
 
 	/* add some values without names (i.e. a list) to the subsection */
 	ucfg_node_value_set(lvl2, "list item1 has some double-quotes:"
 			    "\" and \" such\" ");
-	ucfg_node_sub_append(lvl1, &lvl2);
+	lvl2 = ucfg_new_node ();
+	ucfg_node_sub_append(lvl1, lvl2);
 	ucfg_node_value_set(lvl2, "list item2");
 
 	/* serialize config onto stdout */

@@ -71,19 +71,21 @@ const char *ucfg_strerror(int error)
 }
 
 /* initialize a config structure */
-void ucfg_node_init(struct ucfg_node **conf)
+ucfg_node* ucfg_new_node()
 {
-	*conf = ucfg_xmalloc(sizeof(**conf));
+	ucfg_node *conf = ucfg_xmalloc(sizeof(ucfg_node));
 
-	(*conf)->name = NULL;
-	(*conf)->value = NULL;
+	conf->name = NULL;
+	conf->value = NULL;
 
-	(*conf)->sub = NULL;
-	(*conf)->next = NULL;
+	conf->sub = NULL;
+	conf->next = NULL;
+
+	return conf;
 }
 
 /* destroy a config structure */
-void ucfg_node_destroy(struct ucfg_node *conf)
+void ucfg_node_destroy(ucfg_node *conf)
 {
 	if (conf != NULL) {
 		ucfg_node_destroy(conf->sub);
@@ -108,34 +110,29 @@ void ucfg_node_destroy(struct ucfg_node *conf)
 
 
 /* make the current node contain a new subsection */
-void ucfg_node_sub_append(struct ucfg_node *conf, struct ucfg_node **created)
+void ucfg_node_sub_append(ucfg_node *parent, ucfg_node *child)
 {
-	struct ucfg_node *tmp;
-	if (conf->sub == NULL) {
-		ucfg_node_init(&conf->sub);
-		tmp = conf->sub;
+	ucfg_node *tmp;
+	if (parent->sub == NULL) {
+		parent->sub = child;
 	} else {
-		tmp = conf->sub;
+		tmp = parent->sub;
 		while (tmp->next != NULL) {
 			tmp = tmp->next;
 		}
-		ucfg_node_init(&tmp->next);
-		tmp = tmp->next;
+		tmp->next = child;
 	}
-
-	if (created != NULL)
-		*created = tmp;
 }
 
 /* set the name of a config node */
-void ucfg_node_name_set(struct ucfg_node *conf, const char *name)
+void ucfg_node_name_set(ucfg_node *conf, const char *name)
 {
 	conf->name = ucfg_xmalloc(strlen(name) + 1);
 	strcpy(conf->name, name);
 }
 
 /* set the value of a config node */
-void ucfg_node_value_set(struct ucfg_node *conf, const char *value)
+void ucfg_node_value_set(ucfg_node *conf, const char *value)
 {
 	conf->value = ucfg_xmalloc(strlen(value) + 1);
 	strcpy(conf->value, value);
@@ -177,7 +174,7 @@ static char *ucfg_string_escape(char *str)
 }
 
 /* serialize a config structure onto a file stream, with indentation */
-static void ucfg_write_indented(struct ucfg_node *conf, int indent, FILE *stream)
+static void ucfg_write_indented(ucfg_node *conf, int indent, FILE *stream)
 {
 	fprintf(stream, "%*s", indent, "");
 	if (conf->name)
@@ -200,12 +197,12 @@ static void ucfg_write_indented(struct ucfg_node *conf, int indent, FILE *stream
 }
 
 /* serialize a config structure onto a file stream */
-void ucfg_write(struct ucfg_node *conf, FILE *stream)
+void ucfg_write(ucfg_node *conf, FILE *stream)
 {
 	ucfg_write_indented(conf, 0, stream);
 }
 
-int ucfg_write_string(struct ucfg_node *conf, char **string)
+int ucfg_write_string(ucfg_node *conf, char **string)
 {
 	size_t size = 0;
 	FILE *fd = tmpfile();
@@ -224,7 +221,7 @@ int ucfg_write_string(struct ucfg_node *conf, char **string)
 
 
 /* serialize a config structure into a config file */
-int ucfg_write_file(struct ucfg_node *conf, const char *filename)
+int ucfg_write_file(ucfg_node *conf, const char *filename)
 {
 	FILE *f = fopen(filename, "w");
 	if (!f) {
@@ -332,14 +329,14 @@ static char *parse_read_name(FILE *stream)
 }
 
 /* create a config structure from a file stream */
-int ucfg_read(struct ucfg_node **dest, FILE *stream)
+int ucfg_read(ucfg_node **dest, FILE *stream)
 {
-	struct ucfg_node *cur;
+	ucfg_node *cur;
 	int retval = UCFG_OK;
 	int tmpc;
 	char *tmps;
 
-	ucfg_node_init(dest);
+	*dest = ucfg_new_node();
 	cur = *dest;
 
 	do {
@@ -349,7 +346,7 @@ int ucfg_read(struct ucfg_node **dest, FILE *stream)
 		if (tmpc != EOF) {
 			if (tmpc == '{') { /* read list, recurse  */
 				if (cur->sub != NULL) {
-					ucfg_node_init(&cur->next);
+					cur->next = ucfg_new_node();
 					cur = cur->next;
 				}
 				if ((retval = ucfg_read(&cur->sub, stream)) != UCFG_OK) {
@@ -359,7 +356,7 @@ int ucfg_read(struct ucfg_node **dest, FILE *stream)
 				break;
 			} else if (tmpc == '"') {
 				if (cur->value != NULL) {
-					ucfg_node_init(&cur->next);
+					cur->next = ucfg_new_node();
 					cur = cur->next;
 				}
 				if ((tmps = parse_read_value(stream)) != NULL) {
@@ -374,7 +371,7 @@ int ucfg_read(struct ucfg_node **dest, FILE *stream)
 					retval = UCFG_ERR_SYNTAX;
 					break;
 				} else if (cur->sub != NULL || cur->value != NULL) {
-					ucfg_node_init(&cur->next);
+					cur->next = ucfg_new_node();
 					cur = cur->next;
 				}
 				if ((tmps = parse_read_name(stream)) != NULL) {
@@ -395,7 +392,7 @@ int ucfg_read(struct ucfg_node **dest, FILE *stream)
 	return retval;
 }
 
-int ucfg_read_string(struct ucfg_node **dest, const char *string)
+int ucfg_read_string(ucfg_node **dest, const char *string)
 {
 	int retval;
 	FILE *fd = tmpfile();
@@ -411,7 +408,7 @@ int ucfg_read_string(struct ucfg_node **dest, const char *string)
 }
 
 /* create a config structure from a config file */
-int ucfg_read_file(struct ucfg_node **dest, const char *filename)
+int ucfg_read_file(ucfg_node **dest, const char *filename)
 {
 	int retval;
 	FILE *f = fopen(filename, "r");
@@ -448,7 +445,7 @@ static char *strsepc(char **stringp)
 }
 
 /* lookup a section or value in a config structure */
-int ucfg_lookup(struct ucfg_node **found, struct ucfg_node *root, const char *path)
+int ucfg_lookup(ucfg_node **found, ucfg_node *root, const char *path)
 {
 	char *lpath;
 	char *curpos;

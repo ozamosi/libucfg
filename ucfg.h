@@ -18,12 +18,13 @@
 
 #include <stdio.h>
 
-struct ucfg_node {
+typedef struct _ucfg_node ucfg_node;
+struct _ucfg_node {
 	char *name;
 	char *value;
 
-	struct ucfg_node *sub;
-	struct ucfg_node *next;
+	ucfg_node *sub;
+	ucfg_node *next;
 };
 
 enum {
@@ -37,22 +38,22 @@ enum {
 
 const char *ucfg_strerror(int error);
 
-void ucfg_node_init(struct ucfg_node **conf);
-void ucfg_node_destroy(struct ucfg_node *conf);
+ucfg_node* ucfg_new_node();
+void ucfg_node_destroy(ucfg_node *conf);
 
-void ucfg_node_name_set(struct ucfg_node *conf, const char *name);
-void ucfg_node_value_set(struct ucfg_node *conf, const char *value);
+void ucfg_node_name_set(ucfg_node *conf, const char *name);
+void ucfg_node_value_set(ucfg_node *conf, const char *value);
 
-void ucfg_node_sub_append(struct ucfg_node *conf, struct ucfg_node **created);
+void ucfg_node_sub_append(ucfg_node *parent, ucfg_node *child);
 
-int ucfg_read(struct ucfg_node **dest, FILE *stream);
-int ucfg_read_string(struct ucfg_node **dest, const char *string);
-int ucfg_read_file(struct ucfg_node **dest, const char *filename);
+int ucfg_read(ucfg_node **dest, FILE *stream);
+int ucfg_read_string(ucfg_node **dest, const char *string);
+int ucfg_read_file(ucfg_node **dest, const char *filename);
 
-void ucfg_write(struct ucfg_node *conf, FILE *stream);
-int ucfg_write_string(struct ucfg_node *conf, char **string);
-int ucfg_write_file(struct ucfg_node *conf, const char *filename);
+void ucfg_write(ucfg_node *conf, FILE *stream);
+int ucfg_write_string(ucfg_node *conf, char **string);
+int ucfg_write_file(ucfg_node *conf, const char *filename);
 
-int ucfg_lookup(struct ucfg_node **found, struct ucfg_node *root, const char *path);
+int ucfg_lookup(ucfg_node **found, ucfg_node *root, const char *path);
 
 #endif
