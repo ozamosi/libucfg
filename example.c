@@ -21,7 +21,7 @@
 
 int main(int argc, char **argv)
 {
-	struct ucfg_node *cfg, *tmp;
+	struct ucfg_node *cfg, *lvl1, *lvl2;
 	int err;
 
 	/* create a root element and set its name */
@@ -29,31 +29,31 @@ int main(int argc, char **argv)
 	ucfg_node_name_set(cfg, "root");
 
 	/* create subsection */
-	ucfg_node_sub_create(cfg, &tmp);
+	ucfg_node_sub_append(cfg, &lvl1);
 
 	/* set name and value for first element in subsection */
-	ucfg_node_name_set(tmp, "child");
-	ucfg_node_value_set(tmp, "child value");
+	ucfg_node_name_set(lvl1, "child");
+	ucfg_node_value_set(lvl1, "child value");
 
 	/* append another element to the subsection */
-	ucfg_node_next_append(tmp, &tmp);
+	ucfg_node_sub_append(cfg, &lvl1);
 
 	/* set name and value for that element */
-	ucfg_node_name_set(tmp, "another child");
-	ucfg_node_value_set(tmp, "another child's value");
+	ucfg_node_name_set(lvl1, "another child");
+	ucfg_node_value_set(lvl1, "another child's value");
 
 	/* append yet another element and name it */
-	ucfg_node_next_append(tmp, &tmp);
-	ucfg_node_name_set(tmp, "child node with list");
+	ucfg_node_sub_append(cfg, &lvl1);
+	ucfg_node_name_set(lvl1, "child node with list");
 
 	/* and make it a subsection */
-	ucfg_node_sub_create(tmp, &tmp);
+	ucfg_node_sub_append(lvl1, &lvl2);
 
 	/* add some values without names (i.e. a list) to the subsection */
-	ucfg_node_value_set(tmp, "list item1 has some double-quotes:"
+	ucfg_node_value_set(lvl2, "list item1 has some double-quotes:"
 			    "\" and \" such\" ");
-	ucfg_node_next_append(tmp, &tmp);
-	ucfg_node_value_set(tmp, "list item2");
+	ucfg_node_sub_append(lvl1, &lvl2);
+	ucfg_node_value_set(lvl2, "list item2");
 
 	/* serialize config onto stdout */
 	ucfg_write(cfg, stdout);
@@ -70,8 +70,8 @@ int main(int argc, char **argv)
 	if ((err = ucfg_read_file(&cfg, "example.conf")) == UCFG_OK) {
 
 		/* lookup a value in the config and print it */
-		if (ucfg_lookup(&tmp, cfg, "root:child node with list:") == UCFG_OK)
-			printf("%s\n", tmp->value);
+		if (ucfg_lookup(&lvl2, cfg, "root:child node with list:") == UCFG_OK)
+			printf("%s\n", lvl2->value);
 
 		ucfg_node_destroy(cfg);
 	} else {

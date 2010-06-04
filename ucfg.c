@@ -108,29 +108,23 @@ void ucfg_node_destroy(struct ucfg_node *conf)
 
 
 /* make the current node contain a new subsection */
-void ucfg_node_sub_create(struct ucfg_node *conf, struct ucfg_node **created)
-{
-	ucfg_node_init(&conf->sub);
-	if (created != NULL) {
-		*created = conf->sub;
-	}
-}
-
-/* append a config node onto a section */
-void ucfg_node_next_append(struct ucfg_node *conf, struct ucfg_node **created)
+void ucfg_node_sub_append(struct ucfg_node *conf, struct ucfg_node **created)
 {
 	struct ucfg_node *tmp;
-
-	tmp = conf;
-	while (tmp->next != NULL) {
+	if (conf->sub == NULL) {
+		ucfg_node_init(&conf->sub);
+		tmp = conf->sub;
+	} else {
+		tmp = conf->sub;
+		while (tmp->next != NULL) {
+			tmp = tmp->next;
+		}
+		ucfg_node_init(&tmp->next);
 		tmp = tmp->next;
 	}
 
-	ucfg_node_init(&tmp->next);
-
-	if (created != NULL) {
-		*created = tmp->next;
-	}
+	if (created != NULL)
+		*created = tmp;
 }
 
 /* set the name of a config node */
