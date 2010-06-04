@@ -47,9 +47,11 @@ void ucfg_node_sub_create(struct ucfg_node *conf, struct ucfg_node **created);
 void ucfg_node_next_append(struct ucfg_node *conf, struct ucfg_node **created);
 
 int ucfg_read(struct ucfg_node **dest, FILE *stream);
+int ucfg_read_string(struct ucfg_node **dest, const char *string);
 int ucfg_read_file(struct ucfg_node **dest, const char *filename);
 
 void ucfg_write(struct ucfg_node *conf, FILE *stream);
+int ucfg_write_string(struct ucfg_node *conf, char **string);
 int ucfg_write_file(struct ucfg_node *conf, const char *filename);
 
 int ucfg_lookup(struct ucfg_node **found, struct ucfg_node *root, const char *path);

@@ -211,6 +211,24 @@ void ucfg_write(struct ucfg_node *conf, FILE *stream)
 	ucfg_write_indented(conf, 0, stream);
 }
 
+int ucfg_write_string(struct ucfg_node *conf, char **string)
+{
+	size_t size = 0;
+	FILE *fd = tmpfile();
+
+	if (fd == NULL)
+		return UCFG_ERR_FILE_READ;
+	
+	ucfg_write(conf, fd);
+	size = ftell(fd);
+	rewind(fd);
+	*string = ucfg_xmalloc (size);
+	fread (*string, size, 1, fd);
+	fclose(fd);
+	return UCFG_OK;
+}
+
+
 /* serialize a config structure into a config file */
 int ucfg_write_file(struct ucfg_node *conf, const char *filename)
 {
@@ -380,6 +398,21 @@ int ucfg_read(struct ucfg_node **dest, FILE *stream)
 		*dest = NULL;
 	}
 
+	return retval;
+}
+
+int ucfg_read_string(struct ucfg_node **dest, const char *string)
+{
+	int retval;
+	FILE *fd = tmpfile();
+
+	if (fd == NULL)
+		return UCFG_ERR_FILE_READ;
+	
+	fprintf(fd, string);
+	rewind(fd);
+	retval = ucfg_read(dest, fd);
+	fclose(fd);
 	return retval;
 }
 
